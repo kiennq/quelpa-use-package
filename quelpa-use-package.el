@@ -98,12 +98,15 @@ This option will disable `quelpa-persistent-cache-p'."
          (let ((info (pcase (car args)
                        ((pred listp) (car args))
                        (`,pkg `(,pkg)))))
-           `((if (and quelpa-use-package-inhibit-loading-quelpa
-                      (package-installed-p ',(car info)))
-                 (when quelpa-use-package-as-source-of-truth
-                   (setq quelpa-cache (when (boundp 'quelpa-cache) quelpa-cache))
-                   (setf (alist-get ',(car info) quelpa-cache) ',(cdr info)))
-               (quelpa ',@args))))
+           `((let ((pkg ',(car info)))
+               (require 'finder-inf nil t)
+               (if (and quelpa-use-package-inhibit-loading-quelpa
+                        (or (assq pkg package--builtins)
+                            (memq pkg package-activated-list)))
+                   (when quelpa-use-package-as-source-of-truth
+                     (setq quelpa-cache (when (boundp 'quelpa-cache) quelpa-cache))
+                     (setf (alist-get ',(car info) quelpa-cache) ',(cdr info)))
+                 (quelpa ',@args)))))
          body)
       body)))
 
